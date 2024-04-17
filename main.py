@@ -1,6 +1,6 @@
 import json
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from models import Composer, Piece
 
@@ -39,10 +39,18 @@ async def get_pieces(composer_id: int = None) -> list[Piece]:
 
 @app.post("/composers")
 async def add_composer(composer: Composer) -> None:
+    for existing_composer in composers:
+        if existing_composer.composer_id == composer.composer_id:
+            raise HTTPException(status_code=400, detail="Duplicate ID")
     composers.append(composer)
-
+    
 @app.post("/pieces")
 async def add_piece(piece: Piece) -> None:
+    composer_ids = []
+    for existing_id in pieces:
+        composer_ids.append(existing_id.composer_id)
+    if piece.composer_id not in composer_ids:
+        raise HTTPException(status_code=400, detail="Composer ID Not Found")
     pieces.append(piece)
 
 @app.put("/composers/{composer_id}")
@@ -50,10 +58,17 @@ async def update_composer(composer_id: int, updated_composer: Composer) -> None:
     for i, composer in enumerate(composers):
         if composer.composer_id == composer_id:
             composers[i] = updated_composer
-            return
+            raise HTTPException(status_code=400, detail="Duplicate ID")
+    return
 
 @app.put("/pieces/{piece_name}")
 async def update_piece(piece_name: str, updated_piece: Piece) -> None:
+    composer_ids = []
+    for existing_id in pieces:
+        composer_ids.append(existing_id.composer_id)
+    if updated_piece.composer_id not in composer_ids:
+        raise HTTPException(status_code=400, detail="Composer ID Not Found")
+    
     for i, piece in enumerate(pieces):
         if piece.name == piece_name:
             pieces[i] = updated_piece
