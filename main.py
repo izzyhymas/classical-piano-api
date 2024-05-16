@@ -2,7 +2,7 @@ import json
 
 from fastapi import FastAPI, HTTPException
 
-from models import Composer, Piece
+from schemas import Composer, Piece
 
 
 app = FastAPI()
@@ -59,6 +59,7 @@ async def update_composer(composer_id: int, updated_composer: Composer) -> None:
         if composer.composer_id == composer_id:
             composers[i] = updated_composer
             raise HTTPException(status_code=400, detail="Duplicate ID")
+    composers.append(updated_composer)
     return
 
 @app.put("/pieces/{piece_name}")
@@ -73,8 +74,9 @@ async def update_piece(piece_name: str, updated_piece: Piece) -> None:
         if piece.name == piece_name:
             pieces[i] = updated_piece
             return
+    pieces.append(updated_piece)
 
-@app.delete("/composer/{composer_id}")
+@app.delete("/composers/{composer_id}")
 async def remove_composer(composer_id: int) -> None:
     for i, composer in enumerate(composers):
         if composer.composer_id == composer_id:
